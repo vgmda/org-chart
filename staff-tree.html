@@ -2,7 +2,7 @@
 <html>  
   <head>  
     <meta charset="UTF-8" />  
-    <title>OrgChart – Staff (Full)</title>  
+    <title>Org Chart – TS Staff</title>  
     <link rel="shortcut icon" type="image/x-icon" href="misc/favicon.ico" />  
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />  
   </head>  
@@ -33,16 +33,85 @@
         line-height: 16px !important;  
         text-align: left !important;  
       }  
+  
+      /* Left slide-in details panel */  
+      #node-details {  
+        position: fixed;  
+        top: 0;  
+        left: 0;  
+        width: 300px;  
+        max-width: 80vw;  
+        height: 100vh;  
+        background: #ffffff;  
+        border-right: 1px solid #e4e2e9;  
+        box-shadow: 2px 0 10px rgba(0, 0, 0, 0.08);  
+        font-family: "Inter", sans-serif;  
+        font-size: 12px;  
+        color: #333;  
+        z-index: 10;  
+        transform: translateX(-100%);  
+        transition: transform 0.18s ease-out;  
+        display: flex;  
+        flex-direction: column;  
+      }  
+      #node-details.show {  
+        transform: translateX(0);  
+      }  
+  
+      #node-details-header {  
+        display: flex;  
+        align-items: center;  
+        justify-content: space-between;  
+        padding: 10px 12px;  
+        border-bottom: 1px solid #f0eff5;  
+        background: #fafafa;  
+      }  
+      #node-details h3 {  
+        margin: 0;  
+        font-size: 14px;  
+        font-weight: 600;  
+      }  
+      #node-details .subtitle {  
+        margin: 2px 0 0 0;  
+        color: #555;  
+        font-size: 12px;  
+      }  
+      #node-details .close-btn {  
+        cursor: pointer;  
+        font-size: 11px;  
+        color: #888;  
+        padding-left: 8px;  
+      }  
+      #node-details .close-btn:hover {  
+        color: #000;  
+      }  
+  
+      #node-details-body {  
+        padding: 8px 12px 12px 12px;  
+        overflow-y: auto;  
+        flex: 1;  
+      }  
+      #node-details .section-title {  
+        font-weight: 600;  
+        margin-top: 6px;  
+        margin-bottom: 2px;  
+        font-size: 11px;  
+      }  
+      #node-details .section-body {  
+        font-size: 11px;  
+        color: #555;  
+      }  
     </style>  
   
     <div class="action-buttons" style="margin: 0 100px">  
       <button  
-        onclick='chart.setExpanded("jonathan.fanti").render()'  
+        onclick='chart.setCentered("vasile.gancin").render()'  
         class="simptip-position-bottom"  
-        data-tooltip='chart.setExpanded("jonathan.fanti") &#xa; .render()'  
+        data-tooltip='chart.setCentered("vasile.gancin") &#xa; .render()'  
       >  
-        Expand Jonathan Fanti  
+        Center on me (test)  
       </button>  
+  
       <button  
         onclick="chart.fit()"  
         class="simptip-position-bottom"  
@@ -139,15 +208,19 @@
       </script>  
     </div>  
   
-    <a href="https://github.com/bumbeishvili/d3-organization-chart">  
-      <img  
-        style="position: fixed; top: 0; right: 0; border: 0; z-index: 2"  
-        width="149"  
-        height="149"  
-        src="https://bumbeishvili.github.io/d3-tooltip/forkme.png"  
-        alt="Fork me on GitHub"  
-      />  
-    </a>  
+    <!-- Left slide-in node details panel -->  
+    <div id="node-details">  
+      <div id="node-details-header">  
+        <div>  
+          <h3 id="node-details-name"></h3>  
+          <div id="node-details-title" class="subtitle"></div>  
+        </div>  
+        <div class="close-btn" onclick="hideNodeDetails()">✕</div>  
+      </div>  
+      <div id="node-details-body">  
+        <div id="node-details-content"></div>  
+      </div>  
+    </div>  
   
     <!-- ORG CHART ESSENTIAL CONTENT -->  
     <script src="https://d3js.org/d3.v7.min.js"></script>  
@@ -163,39 +236,174 @@
       var index = 0;  
       var chart;  
   
-      // IMPORTANT: adjust this filename if you used a different one  
+      const DAY_LABELS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];  
+  
+      function formatWorkDays(data) {  
+        const weekStr = data.week || "Mon,Tue,Wed,Thu,Fri";  
+        const weekendStr = data.weekend || "Sat,Sun";  
+  
+        const weekDays = weekStr  
+          .split(",")  
+          .map((s) => s.trim())  
+          .filter(Boolean);  
+        const weekendDays = weekendStr  
+          .split(",")  
+          .map((s) => s.trim())  
+          .filter(Boolean);  
+  
+        let now;  
+        try {  
+          now = data.tz  
+            ? new Date(  
+                new Date().toLocaleString("en-US", { timeZone: data.tz })  
+              )  
+            : new Date();  
+        } catch (e) {  
+          now = new Date();  
+        }  
+        const todayLabel = DAY_LABELS[now.getDay()];  
+  
+        function renderDay(day) {  
+          const isToday = day === todayLabel;  
+          return `<span style="  
+            padding:0 2px;  
+            ${  
+              isToday  
+                ? "font-weight:600;color:#000;text-decoration:underline;"  
+                : "color:#555;"  
+            }  
+          ">${day}</span>`;  
+        }  
+  
+        const weekHtml = weekDays.map(renderDay).join(", ");  
+        const weekendHtml = weekendDays.map(renderDay).join(", ");  
+  
+        return { weekHtml, weekendHtml };  
+      }  
+  
+      function formatWorkingHoursLines(data) {  
+        const whMon = data["WH Mon"] || "";  
+        const whTue = data["WH Tue"] || "";  
+        const whWed = data["WH Wed"] || "";  
+        const whThu = data["WH Thu"] || "";  
+        const whFri = data["WH Fri"] || "";  
+        const whSat = data["WH Sat"] || "";  
+        const whSun = data["WH Sun"] || "";  
+  
+        const lines = [];  
+        if (whMon) lines.push(`Mon: ${whMon}`);  
+        if (whTue) lines.push(`Tue: ${whTue}`);  
+        if (whWed) lines.push(`Wed: ${whWed}`);  
+        if (whThu) lines.push(`Thu: ${whThu}`);  
+        if (whFri) lines.push(`Fri: ${whFri}`);  
+        if (whSat) lines.push(`Sat: ${whSat}`);  
+        if (whSun) lines.push(`Sun: ${whSun}`);  
+  
+        return lines;  
+      }  
+  
+      function hideNodeDetails() {  
+        const container = document.getElementById("node-details");  
+        if (container) container.classList.remove("show");  
+      }  
+  
+      function showNodeDetails(data) {  
+        const container = document.getElementById("node-details");  
+        const nameEl = document.getElementById("node-details-name");  
+        const titleEl = document.getElementById("node-details-title");  
+        const content = document.getElementById("node-details-content");  
+        if (!container || !content || !nameEl || !titleEl) return;  
+  
+        const team = data.team || "";  
+        const geo = data.geo || "";  
+        const country = data.country || "";  
+        const tz = data.tz || "";  
+        const title = data.title || "";  
+        const name = data.name || "";  
+        const manager = data.manager || "—";  
+  
+        const weekStr = data.week || "Mon,Tue,Wed,Thu,Fri";  
+        const weekendStr = data.weekend || "Sat,Sun";  
+  
+        const hoursLines = formatWorkingHoursLines(data);  
+  
+        nameEl.textContent = name;  
+        titleEl.textContent = title;  
+  
+        content.innerHTML = `  
+          <div class="section-body" style="margin-bottom:6px;">  
+            ${  
+              team ? team : ""  
+            }${team && geo ? " • " : ""}${geo ? geo : ""}${  
+          (team || geo) && country ? " • " + country : country ? country : ""  
+        }  
+          </div>  
+          <div class="section-title">Timezone</div>  
+          <div class="section-body">${tz || "—"}</div>  
+  
+          <div class="section-title">Manager</div>  
+          <div class="section-body">${manager}</div>  
+  
+          <div class="section-title">Week</div>  
+          <div class="section-body">${weekStr}</div>  
+  
+          <div class="section-title">Weekend</div>  
+          <div class="section-body">${weekendStr}</div>  
+  
+          <div class="section-title">Working hours</div>  
+          <div class="section-body">  
+            ${  
+              hoursLines.length  
+                ? hoursLines.join("<br/>")  
+                : "No working hours defined"  
+            }  
+          </div>  
+        `;  
+  
+        container.classList.add("show");  
+      }  
+  
       d3.csv("misc/staff_full.csv").then((rows) => {  
-        // Drop empty lines  
         rows = rows.filter((r) => r.id);  
   
-        // Map manager -> parentId and normalise some fields  
         rows.forEach((d) => {  
           d.parentId = d.manager || "";  
           d.name = d.name || d["name"];  
           d.title = d.title || d["title"];  
         });  
   
-        // Optional: debug to see what the data looks like  
         console.log("ROW SAMPLE", rows[0], rows[1], rows[2]);  
   
         chart = new d3.OrgChart()  
           .container(".chart-container")  
-          .pagingStep((d) => 20) // more per page because you have many nodes  
-          .minPagingVisibleNodes((d) => 5)  
           .data(rows)  
-          .nodeHeight((d) => 110)  
-          .nodeWidth((d) => 260)  
+          .nodeHeight((d) => 145)  
+          .nodeWidth((d) => 280)  
           .childrenMargin((d) => 40)  
-          .onNodeClick((d) => console.log(d))  
+          .onNodeClick((d) => {  
+            console.log(d);  
+            showNodeDetails(d.data);  
+          })  
           .compactMarginBetween((d) => 35)  
           .compactMarginPair((d) => 30)  
           .neighbourMargin((a, b) => 20)  
           .nodeContent(function (d) {  
             const data = d.data;  
+  
+            const team = data.team || "";  
+            const geo = data.geo || "";  
+            const tz = data.tz || "";  
+            const country = data.country || "";  
+            const title = data.title || "";  
+            const name = data.name || "";  
+            const manager = data.manager || "—";  
+  
+            const { weekHtml, weekendHtml } = formatWorkDays(data);  
+  
             return `  
               <div style="  
                   box-sizing:border-box;  
-                  padding:8px;  
+                  padding:8px 10px;  
                   width:${d.width}px;  
                   height:${d.height}px;  
                   border-radius:8px;  
@@ -203,26 +411,52 @@
                   border:1px solid #E4E2E9;  
                   font-family:'Inter', sans-serif;  
                   font-size:12px;  
+                  display:flex;  
+                  flex-direction:column;  
+                  justify-content:space-between;  
+                  cursor:pointer;  
                 ">  
-                <div style="font-weight:600;font-size:14px;margin-bottom:4px;">  
-                  ${data.name || ""}  
-                </div>  
-                <div style="color:#555;margin-bottom:4px;">  
-                  ${data.title || ""}  
-                </div>  
-                <div style="color:#777;font-size:11px;margin-bottom:2px;">  
-                  ${data.region || ""} ${  
-              data.country ? "• " + data.country : ""  
+                <div>  
+                  <div style="font-weight:600;font-size:14px;margin-bottom:2px;">  
+                    ${name}  
+                  </div>  
+                  <div style="color:#555;margin-bottom:4px;">  
+                    ${title}  
+                  </div>  
+                  <div style="color:#777;font-size:11px;margin-bottom:2px;">  
+                    ${  
+                      team ? team : ""  
+                    }${team && geo ? " • " : ""}${geo ? geo : ""}${  
+              (team || geo) && country ? " • " + country : country ? country : ""  
             }  
+                  </div>  
+                  <div style="color:#999;font-size:11px;margin-bottom:2px;">  
+                    ${tz ? `Timezone: ${tz}` : ""}  
+                  </div>  
+                  <div style="color:#999;font-size:11px;">  
+                    Manager: ${manager}  
+                  </div>  
                 </div>  
-                <div style="color:#999;font-size:10px;">  
-                  Manager: ${data.manager || "—"}  
+                <div style="  
+                  margin-top:6px;  
+                  border-top:1px solid #F0EFF5;  
+                  padding-top:4px;  
+                  font-size:11px;  
+                  color:#555;  
+                ">  
+                  <div style="margin-bottom:2px;">  
+                    <span style="font-weight:600;">Week:</span>  
+                    ${weekHtml}  
+                  </div>  
+                  <div style="margin-bottom:0;">  
+                    <span style="font-weight:600;">Weekend:</span>  
+                    ${weekendHtml}  
+                  </div>  
                 </div>  
               </div>  
             `;  
           });  
   
-        // Keep the layout tweaks from the original demo  
         chart.layoutBindings(  
           (() => {  
             const layouts = chart.layoutBindings();  
