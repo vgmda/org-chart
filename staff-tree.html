@@ -2,20 +2,11 @@
 <html>  
   <head>  
     <meta charset="UTF-8" />  
-    <title>Org Chart – TS Staff</title>  
+    <title>Technical Services - Org</title>  
     <link rel="shortcut icon" type="image/x-icon" href="misc/favicon.ico" />  
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />  
-  </head>  
   
-  <body>  
-    <!-- NON ESSENTIAL CONTENT (buttons / PDF etc.) -->  
-    <script src="https://unpkg.com/html2canvas@1.1.4/dist/html2canvas.js"></script>  
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.3.1/jspdf.umd.min.js"></script>  
-    <link  
-      href="https://cdn.jsdelivr.net/npm/simptip@1.0.4/simptip.min.css"  
-      rel="stylesheet"  
-    />  
-  
+    <!-- Styles -->  
     <style>  
       [data-tooltip]:focus:after {  
         display: none;  
@@ -32,6 +23,37 @@
         white-space: pre;  
         line-height: 16px !important;  
         text-align: left !important;  
+      }  
+  
+      /* Buttons styled similar to cards */  
+      .action-buttons {  
+        margin: 0 100px;  
+        padding: 8px 0;  
+        display: flex;  
+        flex-wrap: wrap;  
+        gap: 8px;  
+        align-items: center;  
+      }  
+      .action-buttons button {  
+        border: 1px solid #e4e2e9;  
+        background: #ffffff;  
+        border-radius: 16px;  
+        padding: 5px 10px;  
+        font-family: "Inter", sans-serif;  
+        font-size: 11px;  
+        color: #333;  
+        cursor: pointer;  
+        transition: background 0.12s ease, box-shadow 0.12s ease,  
+          border-color 0.12s ease;  
+      }  
+      .action-buttons button:hover {  
+        background: #f7f7fb;  
+        box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);  
+        border-color: #d4d2df;  
+      }  
+      .action-buttons button:active {  
+        background: #ececf5;  
+        box-shadow: none;  
       }  
   
       /* Left slide-in details panel */  
@@ -65,6 +87,24 @@
         padding: 10px 12px;  
         border-bottom: 1px solid #f0eff5;  
         background: #fafafa;  
+      }  
+      #node-details-header-left {  
+        display: flex;  
+        align-items: center;  
+        gap: 8px;  
+      }  
+      #node-details-avatar {  
+        width: 34px;  
+        height: 34px;  
+        border-radius: 50%;  
+        background: #e4e2e9;  
+        display: flex;  
+        align-items: center;  
+        justify-content: center;  
+        font-size: 14px;  
+        font-weight: 600;  
+        color: #555;  
+        flex-shrink: 0;  
       }  
       #node-details h3 {  
         margin: 0;  
@@ -102,14 +142,17 @@
         color: #555;  
       }  
     </style>  
+  </head>  
   
-    <div class="action-buttons" style="margin: 0 100px">  
+  <body>  
+    <!-- NON ESSENTIAL CONTENT (buttons / PDF etc.) -->  
+    <div class="action-buttons">  
       <button  
-        onclick='chart.setCentered("vasile.gancin").render()'  
+        onclick='chart.setCentered(ORG_CONFIG.defaultCenteredId).render()'  
         class="simptip-position-bottom"  
         data-tooltip='chart.setCentered("vasile.gancin") &#xa; .render()'  
       >  
-        Center on me (test)  
+        Center on me  
       </button>  
   
       <button  
@@ -124,49 +167,49 @@
         class="simptip-position-bottom"  
         data-tooltip='chart.layout(["right","bottom","left","top"][index++%4]) &#xa; .render() &#xa; .fit()'  
       >  
-        Swap Layouts  
+        Swap layouts  
       </button>  
       <button  
         onclick="chart.expandAll()"  
         class="simptip-position-bottom"  
         data-tooltip="chart.expandAll()"  
       >  
-        Expand All  
+        Expand all  
       </button>  
       <button  
         onclick="chart.collapseAll()"  
         class="simptip-position-bottom"  
         data-tooltip="chart.collapseAll()"  
       >  
-        Collapse All  
+        Collapse all  
       </button>  
       <button  
         onclick="chart.fullscreen()"  
         class="simptip-position-bottom"  
         data-tooltip="chart.fullscreen()"  
       >  
-        Full Screen  
+        Full screen  
       </button>  
       <button  
         onclick="chart.zoomIn()"  
         class="simptip-position-bottom"  
         data-tooltip="chart.zoomIn()"  
       >  
-        Zoom In  
+        Zoom in  
       </button>  
       <button  
         onclick="chart.zoomOut()"  
         class="simptip-position-bottom"  
         data-tooltip="chart.zoomOut()"  
       >  
-        Zoom Out  
+        Zoom out  
       </button>  
       <button  
         onclick="chart.exportImg({full:true})"  
         class="simptip-position-bottom"  
         data-tooltip="chart.exportImg({full:true})"  
       >  
-        Export Full Image  
+        Export image  
       </button>  
       <button  
         onclick="chart.exportSvg()"  
@@ -182,38 +225,17 @@
       >  
         Download PDF  
       </button>  
-  
-      <script>  
-        function downloadPdf() {  
-          chart.exportImg({  
-            save: false,  
-            onLoad: (base64) => {  
-              var pdf = new jspdf.jsPDF();  
-              var img = new Image();  
-              img.src = base64;  
-              img.onload = function () {  
-                pdf.addImage(  
-                  img,  
-                  "JPEG",  
-                  5,  
-                  5,  
-                  595 / 3,  
-                  ((img.height / img.width) * 595) / 3  
-                );  
-                pdf.save("chart.pdf");  
-              };  
-            },  
-          });  
-        }  
-      </script>  
     </div>  
   
     <!-- Left slide-in node details panel -->  
     <div id="node-details">  
       <div id="node-details-header">  
-        <div>  
-          <h3 id="node-details-name"></h3>  
-          <div id="node-details-title" class="subtitle"></div>  
+        <div id="node-details-header-left">  
+          <div id="node-details-avatar"></div>  
+          <div>  
+            <h3 id="node-details-name"></h3>  
+            <div id="node-details-title" class="subtitle"></div>  
+          </div>  
         </div>  
         <div class="close-btn" onclick="hideNodeDetails()">✕</div>  
       </div>  
@@ -222,22 +244,37 @@
       </div>  
     </div>  
   
-    <!-- ORG CHART ESSENTIAL CONTENT -->  
-    <script src="https://d3js.org/d3.v7.min.js"></script>  
-    <script src="./build/d3-org-chart.js"></script>  
-    <script src="https://cdn.jsdelivr.net/npm/d3-flextree@2.0.0/build/d3-flextree.js"></script>  
-  
+    <!-- Chart container -->  
     <div  
       class="chart-container"  
       style="padding-top: 10px; height: 1200px; background-color: white"  
     ></div>  
   
+    <!-- External libs -->  
+    <script src="https://unpkg.com/html2canvas@1.1.4/dist/html2canvas.js"></script>  
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.3.1/jspdf.umd.min.js"></script>  
+    <link  
+      href="https://cdn.jsdelivr.net/npm/simptip@1.0.4/simptip.min.css"  
+      rel="stylesheet"  
+    />  
+    <script src="https://d3js.org/d3.v7.min.js"></script>  
+    <script src="./build/d3-org-chart.js"></script>  
+    <script src="https://cdn.jsdelivr.net/npm/d3-flextree@2.0.0/build/d3-flextree.js"></script>  
+  
+    <!-- Main application script -->  
     <script>  
+      // --- Config & globals ---  
+      const ORG_CONFIG = {  
+        dataSource: "csv", // later: "atlas"  
+        csvPath: "misc/staff_full.csv",  
+        defaultCenteredId: "vasile.gancin",  
+      };  
+  
       var index = 0;  
       var chart;  
-  
       const DAY_LABELS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];  
   
+      // --- Formatting helpers ---  
       function formatWorkDays(data) {  
         const weekStr = data.week || "Mon,Tue,Wed,Thu,Fri";  
         const weekendStr = data.weekend || "Sat,Sun";  
@@ -302,17 +339,39 @@
         return lines;  
       }  
   
+      // --- Details panel (sidebar) ---  
       function hideNodeDetails() {  
         const container = document.getElementById("node-details");  
         if (container) container.classList.remove("show");  
+      }  
+  
+      function getInitialsForAvatar(data) {  
+        let first = data["first name"] || "";  
+        let last = data["last name"] || "";  
+  
+        if (!first && !last && data.name) {  
+          const parts = data.name.trim().split(/\s+/);  
+          if (parts.length === 1) {  
+            first = parts[0];  
+          } else if (parts.length >= 2) {  
+            first = parts[0];  
+            last = parts[parts.length - 1];  
+          }  
+        }  
+  
+        const f = first ? first[0].toUpperCase() : "";  
+        const l = last ? last[0].toUpperCase() : "";  
+  
+        return (f + l) || (data.name ? data.name[0].toUpperCase() : "?");  
       }  
   
       function showNodeDetails(data) {  
         const container = document.getElementById("node-details");  
         const nameEl = document.getElementById("node-details-name");  
         const titleEl = document.getElementById("node-details-title");  
+        const avatarEl = document.getElementById("node-details-avatar");  
         const content = document.getElementById("node-details-content");  
-        if (!container || !content || !nameEl || !titleEl) return;  
+        if (!container || !content || !nameEl || !titleEl || !avatarEl) return;  
   
         const team = data.team || "";  
         const geo = data.geo || "";  
@@ -329,6 +388,7 @@
   
         nameEl.textContent = name;  
         titleEl.textContent = title;  
+        avatarEl.textContent = getInitialsForAvatar(data);  
   
         content.innerHTML = `  
           <div class="section-body" style="margin-bottom:6px;">  
@@ -363,114 +423,146 @@
         container.classList.add("show");  
       }  
   
-      d3.csv("misc/staff_full.csv").then((rows) => {  
-        rows = rows.filter((r) => r.id);  
-  
-        rows.forEach((d) => {  
-          d.parentId = d.manager || "";  
-          d.name = d.name || d["name"];  
-          d.title = d.title || d["title"];  
+      // --- Export / PDF helpers ---  
+      function downloadPdf() {  
+        chart.exportImg({  
+          save: false,  
+          onLoad: (base64) => {  
+            var pdf = new jspdf.jsPDF();  
+            var img = new Image();  
+            img.src = base64;  
+            img.onload = function () {  
+              pdf.addImage(  
+                img,  
+                "JPEG",  
+                5,  
+                5,  
+                595 / 3,  
+                ((img.height / img.width) * 595) / 3  
+              );  
+              pdf.save("chart.pdf");  
+            };  
+          },  
         });  
+      }  
+      window.downloadPdf = downloadPdf;  
+      window.hideNodeDetails = hideNodeDetails;  
   
-        console.log("ROW SAMPLE", rows[0], rows[1], rows[2]);  
+      // --- Chart initialization (CSV) ---  
+      function initChartFromCsv() {  
+        d3.csv(ORG_CONFIG.csvPath).then((rows) => {  
+          rows = rows.filter((r) => r.id);  
   
-        chart = new d3.OrgChart()  
-          .container(".chart-container")  
-          .data(rows)  
-          .nodeHeight((d) => 145)  
-          .nodeWidth((d) => 280)  
-          .childrenMargin((d) => 40)  
-          .onNodeClick((d) => {  
-            console.log(d);  
-            showNodeDetails(d.data);  
-          })  
-          .compactMarginBetween((d) => 35)  
-          .compactMarginPair((d) => 30)  
-          .neighbourMargin((a, b) => 20)  
-          .nodeContent(function (d) {  
-            const data = d.data;  
-  
-            const team = data.team || "";  
-            const geo = data.geo || "";  
-            const tz = data.tz || "";  
-            const country = data.country || "";  
-            const title = data.title || "";  
-            const name = data.name || "";  
-            const manager = data.manager || "—";  
-  
-            const { weekHtml, weekendHtml } = formatWorkDays(data);  
-  
-            return `  
-              <div style="  
-                  box-sizing:border-box;  
-                  padding:8px 10px;  
-                  width:${d.width}px;  
-                  height:${d.height}px;  
-                  border-radius:8px;  
-                  background:#ffffff;  
-                  border:1px solid #E4E2E9;  
-                  font-family:'Inter', sans-serif;  
-                  font-size:12px;  
-                  display:flex;  
-                  flex-direction:column;  
-                  justify-content:space-between;  
-                  cursor:pointer;  
-                ">  
-                <div>  
-                  <div style="font-weight:600;font-size:14px;margin-bottom:2px;">  
-                    ${name}  
-                  </div>  
-                  <div style="color:#555;margin-bottom:4px;">  
-                    ${title}  
-                  </div>  
-                  <div style="color:#777;font-size:11px;margin-bottom:2px;">  
-                    ${  
-                      team ? team : ""  
-                    }${team && geo ? " • " : ""}${geo ? geo : ""}${  
-              (team || geo) && country ? " • " + country : country ? country : ""  
-            }  
-                  </div>  
-                  <div style="color:#999;font-size:11px;margin-bottom:2px;">  
-                    ${tz ? `Timezone: ${tz}` : ""}  
-                  </div>  
-                  <div style="color:#999;font-size:11px;">  
-                    Manager: ${manager}  
-                  </div>  
-                </div>  
-                <div style="  
-                  margin-top:6px;  
-                  border-top:1px solid #F0EFF5;  
-                  padding-top:4px;  
-                  font-size:11px;  
-                  color:#555;  
-                ">  
-                  <div style="margin-bottom:2px;">  
-                    <span style="font-weight:600;">Week:</span>  
-                    ${weekHtml}  
-                  </div>  
-                  <div style="margin-bottom:0;">  
-                    <span style="font-weight:600;">Weekend:</span>  
-                    ${weekendHtml}  
-                  </div>  
-                </div>  
-              </div>  
-            `;  
+          rows.forEach((d) => {  
+            d.parentId = d.manager || "";  
+            d.name = d.name || d["name"];  
+            d.title = d.title || d["title"];  
           });  
   
-        chart.layoutBindings(  
-          (() => {  
-            const layouts = chart.layoutBindings();  
-            layouts.top.linkY = (node) => node.y + 0;  
-            layouts.top.linkCompactYStart = (node) =>  
-              node.y + node.height / 2 + 15;  
-            return layouts;  
-          })()  
-        );  
+          console.log("ROW SAMPLE", rows[0], rows[1], rows[2]);  
   
-        chart.render();  
-      });  
+          chart = new d3.OrgChart()  
+            .container(".chart-container")  
+            .data(rows)  
+            .nodeHeight((d) => 145)  
+            .nodeWidth((d) => 280)  
+            .childrenMargin((d) => 40)  
+            .onNodeClick((d) => {  
+              console.log(d);  
+              showNodeDetails(d.data);  
+            })  
+            .compactMarginBetween((d) => 35)  
+            .compactMarginPair((d) => 30)  
+            .neighbourMargin((a, b) => 20)  
+            .nodeContent(function (d) {  
+              const data = d.data;  
+  
+              const team = data.team || "";  
+              const geo = data.geo || "";  
+              const tz = data.tz || "";  
+              const country = data.country || "";  
+              const title = data.title || "";  
+              const name = data.name || "";  
+              const manager = data.manager || "—";  
+  
+              const { weekHtml, weekendHtml } = formatWorkDays(data);  
+  
+              return `  
+                <div style="  
+                    box-sizing:border-box;  
+                    padding:8px 10px;  
+                    width:${d.width}px;  
+                    height:${d.height}px;  
+                    border-radius:8px;  
+                    background:#ffffff;  
+                    border:1px solid #E4E2E9;  
+                    font-family:'Inter', sans-serif;  
+                    font-size:12px;  
+                    display:flex;  
+                    flex-direction:column;  
+                    justify-content:space-between;  
+                    cursor:pointer;  
+                  ">  
+                  <div>  
+                    <div style="font-weight:600;font-size:14px;margin-bottom:2px;">  
+                      ${name}  
+                    </div>  
+                    <div style="color:#555;margin-bottom:4px;">  
+                      ${title}  
+                    </div>  
+                    <div style="color:#777;font-size:11px;margin-bottom:2px;">  
+                      ${  
+                        team ? team : ""  
+                      }${team && geo ? " • " : ""}${geo ? geo : ""}${  
+                (team || geo) && country ? " • " + country : country ? country : ""  
+              }  
+                    </div>  
+                    <div style="color:#999;font-size:11px;margin-bottom:2px;">  
+                      ${tz ? `Timezone: ${tz}` : ""}  
+                    </div>  
+                    <div style="color:#999;font-size:11px;">  
+                      Manager: ${manager}  
+                    </div>  
+                  </div>  
+                  <div style="  
+                    margin-top:6px;  
+                    border-top:1px solid #F0EFF5;  
+                    padding-top:4px;  
+                    font-size:11px;  
+                    color:#555;  
+                  ">  
+                    <div style="margin-bottom:2px;">  
+                      <span style="font-weight:600;">Week:</span>  
+                      ${weekHtml}  
+                    </div>  
+                    <div style="margin-bottom:0;">  
+                      <span style="font-weight:600;">Weekend:</span>  
+                      ${weekendHtml}  
+                    </div>  
+                  </div>  
+                </div>  
+              `;  
+            });  
+  
+          chart.layoutBindings(  
+            (() => {  
+              const layouts = chart.layoutBindings();  
+              layouts.top.linkY = (node) => node.y + 0;  
+              layouts.top.linkCompactYStart = (node) =>  
+                node.y + node.height / 2 + 15;  
+              return layouts;  
+            })()  
+          );  
+  
+          chart.render();  
+        });  
+      }  
+  
+      // --- Start ---  
+      initChartFromCsv();  
     </script>  
   
+    <!-- Fonts & icons -->  
     <link rel="preconnect" href="https://fonts.googleapis.com" />  
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />  
     <link  
@@ -481,6 +573,5 @@
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css"  
       rel="stylesheet"  
     />  
-    <style></style>  
   </body>  
 </html>  
